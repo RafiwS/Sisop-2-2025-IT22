@@ -14,7 +14,6 @@
 #define PID_FILE "debugmon.pid"
 #define ERROR_LOG "debugmon_error.log"
 
-// Fungsi mencatat log proses
 void write_log(const char *process_name, const char *status) {
     FILE *log = fopen(LOG_FILE, "a");
     if (!log) return;
@@ -28,7 +27,6 @@ void write_log(const char *process_name, const char *status) {
     fclose(log);
 }
 
-// Menampilkan proses user
 void list_user_processes(const char *username) {
     DIR *proc = opendir("/proc");
     struct dirent *entry;
@@ -69,7 +67,6 @@ void list_user_processes(const char *username) {
     closedir(proc);
 }
 
-// Menjalankan debugmon sebagai daemon
 void daemon_mode(const char *username) {
     pid_t pid = fork();
     if (pid < 0) {
@@ -82,10 +79,8 @@ void daemon_mode(const char *username) {
         exit(EXIT_SUCCESS);
     }
 
-    // Child (daemon)
     if (setsid() < 0) exit(EXIT_FAILURE);
 
-    // Tetap di direktori sekarang
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
         chdir(cwd);
@@ -95,7 +90,6 @@ void daemon_mode(const char *username) {
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
 
-    // Simpan PID ke file
     FILE *pidfile = fopen(PID_FILE, "w");
     if (!pidfile) {
         int errfd = open(ERROR_LOG, O_WRONLY | O_CREAT | O_APPEND, 0644);
@@ -109,14 +103,12 @@ void daemon_mode(const char *username) {
     fprintf(pidfile, "%d", getpid());
     fclose(pidfile);
 
-    // Loop monitoring
     while (1) {
         write_log("debugmon_daemon", "RUNNING");
         sleep(5);
     }
 }
 
-// Menghentikan daemon
 void stop_daemon(const char *username) {
     FILE *pidfile = fopen(PID_FILE, "r");
     if (!pidfile) {
@@ -136,7 +128,6 @@ void stop_daemon(const char *username) {
     }
 }
 
-// Gagalkan semua proses user
 void fail_processes(const char *username) {
     DIR *proc = opendir("/proc");
     struct dirent *entry;
@@ -177,13 +168,11 @@ void fail_processes(const char *username) {
     closedir(proc);
 }
 
-// Mengembalikan proses user
 void revert_processes(const char *username) {
     write_log("debugmon", "RUNNING");
     printf("Proses user %s diizinkan kembali.\n", username);
 }
 
-// Main program
 int main(int argc, char *argv[]) {
     if (argc != 3) {
         printf("Usage: %s <command> <username>\n", argv[0]);
