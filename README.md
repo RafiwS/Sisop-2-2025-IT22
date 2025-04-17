@@ -7,6 +7,7 @@ Zahra Hafizhah 5027241121
 ```
 
 #1 Soal no 1
+
 Pada soal no 1 diberikan beberapa tahapan yang harus dilakukan yaitu :
 1. Download dan ekstrak Clues.zip
 2. Filter file yang hanya bernama `a.txt`, `1.txt`, dll
