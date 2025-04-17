@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 1. Bagian ini dibuat untuk membuat output yaitu menginstall file Clues.zip jika ./action tidak memiliki argumen
 2. Bagian ini juga dibuat untuk melakukan filtering seperti yang ada di dalam code yaitu
    `./action -m Filter` `./action -m Combine` `./action m Decode`
-3. Dan jika argumen tidak ada, maka akan memberikan output `c fprintf(stderr, "Argumen tidak valid. Gunakan: ./action -m [Filter|Combine|Decode]\n");`
+3. Dan jika argumen tidak ada, maka akan memberikan output `fprintf(stderr, "Argumen tidak valid. Gunakan: ./action -m [Filter|Combine|Decode]\n");`
 
 ```c
 void download_and_extract() {
