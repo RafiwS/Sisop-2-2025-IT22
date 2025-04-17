@@ -94,4 +94,46 @@ int is_valid_filename(const char *filename) {
         strcmp(filename + 1, ".txt") == 0;
 }
 ```
+1. File yang valid hanya yang namanya terdiri dari satu huruf atau satu angka diikuti dengan file .txt
+Contoh yang valid seperti berikut : `a.txt, 1.txt, z.txt, 5.txt`
+Contoh yang tidak valid seperti berikut :  `ab.txt, 01.txt, a.b.txt, 1a.txt, c.jpeg, x.doc`
 
+```c
+void filter_files() {
+    DIR *d = opendir("Clues");
+    if (!d) {
+        perror("Folder Clues tidak ditemukan");
+        return;
+    }
+
+    mkdir("Filtered", 0755);
+    struct dirent *folder;
+    while ((folder = readdir(d)) != NULL) {
+        if (folder->d_type == DT_DIR && folder->d_name[0] != '.') {
+            char subfolder_path[256];
+            snprintf(subfolder_path, sizeof(subfolder_path), "Clues/%s", folder->d_name);
+            DIR *sub = opendir(subfolder_path);
+            if (!sub) continue;
+
+            struct dirent *file;
+            while ((file = readdir(sub)) != NULL) {
+                if (file->d_type == DT_REG) {
+                    char filepath[300];
+                    snprintf(filepath, sizeof(filepath), "%s/%s", subfolder_path, file->d_name);
+
+                    if (is_valid_filename(file->d_name)) {
+                        char dest[300];
+                        snprintf(dest, sizeof(dest), "Filtered/%s", file->d_name);
+                        rename(filepath, dest);
+                    } else {
+                        remove(filepath);
+                    }
+                }
+            }
+            closedir(sub);
+        }
+    }
+    closedir(d);
+    printf("File berhasil difilter ke folder Filtered.\n");
+}
+```
