@@ -78,4 +78,20 @@ int is_valid_filename(const char *filename) {
         strcmp(filename + 1, ".txt") == 0;
 }
 ```
+1. Pada bagian ini akan memberikan beberapa output yaitu :
+   - Pengecekan Folder Clues
+   - Proses Download Clues.zip
+   - Ekstraksi File Zip
+   - Menghapus File Zip
+   - Informasi Status
+2. Fungsi is_valid_filename() bertugas untuk memvalidasi nama file apakah sesuai dengan kriteria yang diminta oleh soal, yaitu:
+`Panjangnya harus 5 karakter (contoh a.txt, 1.txt), karakter pertama harus huruf atau angka, dan diikuti oleh file .txt`
+
+```c
+int is_valid_filename(const char *filename) {
+    return strlen(filename) == 5 &&
+        (isdigit(filename[0]) || isalpha(filename[0])) &&
+        strcmp(filename + 1, ".txt") == 0;
+}
+```
 
