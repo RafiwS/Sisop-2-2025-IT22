@@ -95,7 +95,7 @@ int is_valid_filename(const char *filename) {
 }
 ```
 1. File yang valid hanya yang namanya terdiri dari satu huruf atau satu angka diikuti dengan file .txt
-Contoh yang valid seperti berikut : `a.txt, 1.txt, z.txt, 5.txt`
+2. Contoh yang valid seperti berikut : `a.txt, 1.txt, z.txt, 5.txt`
 Contoh yang tidak valid seperti berikut :  `ab.txt, 01.txt, a.b.txt, 1a.txt, c.jpeg, x.doc`
 
 ```c
