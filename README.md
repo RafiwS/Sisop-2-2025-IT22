@@ -41,4 +41,41 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 ```
+1. Bagian ini dibuat untuk membuat output yaitu menginstall file Clues.zip jika ./action tidak memiliki argumen
+2. Bagian ini juga dibuat untuk melakukan filtering seperti yang ada di dalam code yaitu
+   `./action -m Filter` `./action -m Combine` `./action m Decode`
+3. Dan jika argumen tidak ada, maka akan memberikan output `c fprintf(stderr, "Argumen tidak valid. Gunakan: ./action -m [Filter|Combine|Decode]\n");`
+
+```c
+void download_and_extract() {
+    struct stat st = {0};
+    if (stat("Clues", &st) == 0) {
+        printf("Folder 'Clues' sudah ada. Skip download.\n");
+        return;
+    }
+
+    printf("Downloading Clues.zip...\n");
+    int dl = system("wget -O Clues.zip 'https://drive.google.com/uc?export=download&id=1xFn1OBJUuSdnApDseEczKhtNzyGekauK'");
+    if (dl != 0) {
+        printf("Gagal download Clues.zip\n");
+        return;
+    }
+
+    printf("Unzipping Clues.zip...\n");
+    int uz = system("unzip Clues.zip > /dev/null");
+    if (uz != 0) {
+        printf("Gagal unzip Clues.zip\n");
+        return;
+    }
+
+    remove("Clues.zip");
+    printf("Clues.zip berhasil di-download dan diekstrak!\n");
+}
+
+int is_valid_filename(const char *filename) {
+    return strlen(filename) == 5 &&
+        (isdigit(filename[0]) || isalpha(filename[0])) &&
+        strcmp(filename + 1, ".txt") == 0;
+}
+```
 
