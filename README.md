@@ -249,8 +249,8 @@ Pada nomer 2, tugas utamanya adalah :
 6. Logging semua aksi ke activity.log.
 
    Code :
-   ```
-   #include <stdio.h>
+ ```
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
