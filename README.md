@@ -969,7 +969,9 @@ int mining(char *argv0, char *args[]) {
     return 0;
 }
 ```
-rodok() akan menjalankan hingga 10 proses mining() dengan nama proses berbeda (mine-crafter-1 s/d mine-crafter-10). Masing-masing mining() akan terus menulis hash acak ke /tmp/.miner.log, berpura-pura sebagai proses mining.
+rodok() akan menjalankan hingga 10 proses mining() dengan nama proses berbeda (mine-crafter-1 s/d mine-crafter-10). Masing-masing mining() akan terus menulis hash acak ke /tmp/.miner.log, berpura-pura sebagai proses mining
+
+![Image](https://github.com/user-attachments/assets/100201f3-a7a2-475b-b427-70b1011d29da)
 
 
 #4 Soal no 4
