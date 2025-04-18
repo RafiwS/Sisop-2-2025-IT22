@@ -240,6 +240,7 @@ Beberapa command line di atas memeliki beberapa fungsi yaitu :
 3. Menyimpan hasil dekripsi ke `Decoded.txt`
 
 Berikut hasil output dari Decoded.txt : 
+
 ![Image](https://github.com/user-attachments/assets/dac58502-3c07-48d3-92ab-31a29f91a669)
 
 #2 Soal no 2
