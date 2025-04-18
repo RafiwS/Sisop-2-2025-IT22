@@ -137,6 +137,107 @@ void filter_files() {
     printf("File berhasil difilter ke folder Filtered.\n");
 }
 ```
+Beberapa command line di atas memiliki beberapa fungsi yaitu : 
+1. Membuka folder Clues/
+2. Membuat folder Filtered/
+3. Iterasi seluruh subfolder di dalam Clues/
+4. Membuka setiap subfolder dan membaca file di dalamnya
+5. Melakukan validasi nama file
+6. Menutup semua folder yang telah dibuka
+7. Menampilkan pesan bahwa proses filtering telah selesai
+
+```c
+void combine_files() {
+    DIR *d = opendir("Filtered");
+    if (!d) {
+        perror("Folder Filtered tidak ditemukan");
+        return;
+    }
+
+    char *numbers[100], *letters[100];
+    int n = 0, l = 0;
+
+    struct dirent *f;
+    while ((f = readdir(d)) != NULL) {
+        if (f->d_type == DT_REG) {
+            if (isdigit(f->d_name[0])) numbers[n++] = strdup(f->d_name);
+            else if (isalpha(f->d_name[0])) letters[l++] = strdup(f->d_name);
+        }
+    }
+    closedir(d);
+
+    qsort(numbers, n, sizeof(char *), compare);
+    qsort(letters, l, sizeof(char *), compare);
+
+    FILE *out = fopen("Combined.txt", "w");
+    int max = n > l ? n : l;
+
+    for (int i = 0; i < max; i++) {
+        if (i < n) {
+            char path[300];
+            snprintf(path, sizeof(path), "Filtered/%s", numbers[i]);
+            FILE *f = fopen(path, "r");
+            if (f) {
+                char c;
+                while ((c = fgetc(f)) != EOF) fputc(c, out);
+                fclose(f);
+                remove(path);
+            }
+        }
+        if (i < l) {
+            char path[300];
+            snprintf(path, sizeof(path), "Filtered/%s", letters[i]);
+            FILE *f = fopen(path, "r");
+            if (f) {
+                char c;
+                while ((c = fgetc(f)) != EOF) fputc(c, out);
+                fclose(f);
+                remove(path);
+            }
+        }
+    }
+
+    fclose(out);
+    printf("Combined.txt berhasil dibuat.\n");
+}
+```
+Beberapa command line di atas memiliki beberapa fungsi yaitu : 
+1. Menggabungkan clue yang tersebar dalam file .txt menjadi satu kesatuan
+2. Menyusun clue dengan urutan khusus (angka-huruf-angka-huruf) agar bisa didekode di tahap selanjutnya
+3. Membersihkan `file .txt` setelah selesai diproses, menjaga folder `Filtered/` tetap kosong
+
+Fungsi ini membuat clue lebih terstruktur dan siap untuk tahap decode ROT13 di fungsi berikutnya
+
+```c
+char rot13(char c) {
+    if ('a' <= c && c <= 'z') return 'a' + (c - 'a' + 13) % 26;
+    if ('A' <= c && c <= 'Z') return 'A' + (c - 'A' + 13) % 26;
+    return c;
+}
+
+void decode_combined() {
+    FILE *in = fopen("Combined.txt", "r");
+    FILE *out = fopen("Decoded.txt", "w");
+
+    if (!in || !out) {
+        perror("Gagal membuka Combined.txt atau membuat Decoded.txt");
+        return;
+    }
+
+    char c;
+    while ((c = fgetc(in)) != EOF) {
+        fputc(rot13(c), out);
+    }
+
+    fclose(in);
+    fclose(out);
+    printf("Decoded.txt berhasil dibuat dari Combined.txt (ROT13).\n");
+}
+```
+Beberapa command line di atas memeliki beberapa fungsi yaitu : 
+1. Mengambil hasil gabungan clue `(Combined.txt)`
+2. Menerapkan metode ROT13 untuk mendekripsi teks
+3. Menyimpan hasil dekripsi ke `Decoded.txt`
 #4 Soal no 4
 
 Pada nomor 4, tugas utamanya adalah :
