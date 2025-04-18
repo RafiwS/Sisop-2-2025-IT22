@@ -239,6 +239,9 @@ Beberapa command line di atas memeliki beberapa fungsi yaitu :
 2. Menerapkan metode ROT13 untuk mendekripsi teks
 3. Menyimpan hasil dekripsi ke `Decoded.txt`
 
+Berikut hasil output dari Decoded.txt : 
+![Image](https://github.com/user-attachments/assets/dac58502-3c07-48d3-92ab-31a29f91a669)
+
 #2 Soal no 2
 Pada nomer 2, tugas utamanya adalah :
 1. --decrypt → jalanin daemon buat decode nama file base64.
