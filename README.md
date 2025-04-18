@@ -723,6 +723,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 Di akhir, bisa di cek di activity.log dengan hasil berikut :
+![Image](https://github.com/user-attachments/assets/d75484e9-88dc-4faa-bb3a-b9d89e27ab09)
 
 
 
