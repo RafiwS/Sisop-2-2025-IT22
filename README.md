@@ -238,6 +238,8 @@ Beberapa command line di atas memeliki beberapa fungsi yaitu :
 1. Mengambil hasil gabungan clue `(Combined.txt)`
 2. Menerapkan metode ROT13 untuk mendekripsi teks
 3. Menyimpan hasil dekripsi ke `Decoded.txt`
+
+
 #4 Soal no 4
 
 Pada nomor 4, tugas utamanya adalah :
